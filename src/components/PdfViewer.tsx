@@ -160,9 +160,9 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         // Yield to main thread
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        // Heuristic to filter headers and footers (top 12% and bottom 12% of page)
-        const headerThreshold = viewport.height * 0.88;
-        const footerThreshold = viewport.height * 0.12;
+        // Aggressive heuristic to filter headers and footers (top 15% and bottom 15% of page)
+        const headerThreshold = viewport.height * 0.85;
+        const footerThreshold = viewport.height * 0.15;
         
         // @ts-ignore
         const filteredItems = textContent.items.filter(item => {
@@ -170,11 +170,15 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
           const y = item.transform[5];
           const text = item.str.trim();
           
+          // Pattern matching for common footer/header noise
+          const isNoisePattern = /^(pag|pág|page|p\.)\s*\d+/i.test(text) || // Page numbers
+                                 /^\d+\s*$/ .test(text) ||                    // Pure digits
+                                 (docId && text.toLowerCase().includes(docId.toLowerCase().substring(0, 10))); // Part of ID/Name
+
           // Ignore items in the header/footer areas
           if (y > headerThreshold || y < footerThreshold) {
-            // Heuristic: Ignore if it's short (likely header/footer content) 
-            // or if it's purely numeric (likely page number)
-            if (text.length < 60 || /^\d+$/.test(text)) {
+            // If it matches a noise pattern or is short, discard it
+            if (isNoisePattern || text.length < 80) {
               return false;
             }
           }

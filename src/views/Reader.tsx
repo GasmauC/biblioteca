@@ -297,32 +297,27 @@ export const Reader = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Bar */}
+      {/* Mobile Bottom Bar - Ultra Compact Single Row */}
       <nav className="mobile-bottom-bar glass-panel mobile-only">
-        {doc.type === 'pdf' && (
-          <div className="mobile-pagination">
-            <button className="toolbar-btn" onClick={() => handlePageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}>
-              <ChevronLeft size={28} />
-            </button>
-            <span className="mobile-page-indicator">{currentPage} / {totalPages}</span>
-            <button className="toolbar-btn" onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages}>
-              <ChevronRight size={28} />
+        <div className="mobile-toolbar-row">
+          <button className="toolbar-btn" onClick={() => handlePageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}>
+            <ChevronLeft size={22} />
+          </button>
+          
+          <div className="mobile-toolbar-center">
+            {doc.type === 'pdf' && (
+              <button className={`toolbar-btn ${isLiquidMode ? 'active' : ''}`} onClick={() => setIsLiquidMode(!isLiquidMode)}>
+                <Droplets size={20} />
+              </button>
+            )}
+            <span className="mobile-page-indicator">{currentPage}/{totalPages}</span>
+            <button className="toolbar-btn" onClick={() => setIsDarkMode(!isDarkMode)}>
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
-        )}
-        <div className="mobile-actions">
-          {doc.type === 'pdf' && (
-            <button className={`toolbar-btn ${isLiquidMode ? 'active' : ''}`} onClick={() => setIsLiquidMode(!isLiquidMode)}>
-              <Droplets size={24} />
-            </button>
-          )}
-          {doc.type === 'pdf' && (
-            <button className={`toolbar-btn ${isHighlighting ? 'active' : ''}`} onClick={() => setIsHighlighting(!isHighlighting)}>
-              <Highlighter size={24} />
-            </button>
-          )}
-          <button className="toolbar-btn" onClick={() => setIsDarkMode(!isDarkMode)}>
-            {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+
+          <button className="toolbar-btn" onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages}>
+            <ChevronRight size={22} />
           </button>
         </div>
       </nav>
