@@ -23,6 +23,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@emnapi/core": "^1.10.0",
+    "@emnapi/runtime": "^1.10.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.2",
     "@types/pdfjs-dist": "^2.10.377",
