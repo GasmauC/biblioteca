@@ -65,49 +65,72 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
       }
     };
     loadPdf();
+    return () => {
+      if (pdfDoc) {
+        pdfDoc.destroy();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docId]);
+  }, [docId, pdfDoc]);
 
   // --- Effect 1: Canvas Rendering (Only when not in Liquid Mode) ---
   useEffect(() => {
+    let renderTask: pdfjsLib.RenderTask | null = null;
+
     const renderCanvas = async () => {
-      // Abort visual render if in LiquidMode (canvas is unmounted)
       if (!pdfDoc || isLiquidMode || !canvasRef.current || isRendering) return;
 
       try {
         setIsRendering(true);
         const pdfPage = await pdfDoc.getPage(page);
         
-        // Ajustamos la escala base para que 1.0 sea legible
-        const viewport = pdfPage.getViewport({ scale: scale * 1.5 });
+        // Mobile-optimized DPI: Cap at 2.0 to save memory and CPU
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = pdfPage.getViewport({ scale: scale * 1.5 * dpr });
+        
         const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext('2d', { alpha: false }); // Optimization: Opaque canvas
 
         if (context) {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
+          
+          // CSS size matches the intended visual size
+          canvas.style.width = `${viewport.width / dpr}px`;
+          canvas.style.height = `${viewport.height / dpr}px`;
 
           if (overlayRef.current) {
             overlayRef.current.height = viewport.height;
             overlayRef.current.width = viewport.width;
+            overlayRef.current.style.width = `${viewport.width / dpr}px`;
+            overlayRef.current.style.height = `${viewport.height / dpr}px`;
           }
 
           const renderContext = {
             canvasContext: context,
             viewport: viewport,
           };
-          // @ts-ignore
-          await pdfPage.render(renderContext).promise;
-          // drawHighlights is called via the other useEffect when it's safe
+          
+          // @ts-ignore - PDF.js types can be tricky between versions
+          renderTask = pdfPage.render(renderContext);
+          await renderTask.promise;
         }
-      } catch (error) {
-        console.error('Error renderizando página:', error);
+      } catch (error: any) {
+        if (error.name !== 'RenderingCancelledException') {
+          console.error('Error renderizando página:', error);
+        }
       } finally {
         setIsRendering(false);
       }
     };
 
     renderCanvas();
+
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfDoc, page, scale, isLiquidMode]);
 

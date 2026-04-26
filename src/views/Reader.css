@@ -260,6 +260,8 @@
     padding-top: 50px; /* Less space needed for minimal top bar */
     padding-bottom: 140px; /* Safe area for bottom bar */
     width: 100vw;
+    contain: content; /* Limit layout/paint scope */
+    overflow-anchor: none; /* Prevent scroll jumping during syncs */
   }
 
   .mobile-top-bar {

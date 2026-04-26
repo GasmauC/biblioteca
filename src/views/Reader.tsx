@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Bookmark, Moon, Sun, Highlighter, Undo2, Droplets, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { PdfViewer } from '../components/PdfViewer';
 import { SyncStatus } from '../components/SyncStatus';
@@ -10,7 +11,9 @@ import './Reader.css';
 export const Reader = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const doc = useLibraryStore(state => state.documents.find(d => d.id === id));
+  
+  // Use stable selector to avoid re-renders when other docs change
+  const doc = useLibraryStore(useShallow(state => state.documents.find(d => d.id === id)));
   const [textContent, setTextContent] = useState<string>('');
   const [zoom, setZoom] = useState<number>(100);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -78,12 +81,16 @@ export const Reader = () => {
     
     scrollRef.current = position;
 
+    // Use higher debounce for performance on mobile
     if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = window.setTimeout(() => {
       if (doc) {
-        useLibraryStore.getState().updateDocumentProgress(doc.id, { percentage: progress, scrollPosition: position });
+        useLibraryStore.getState().updateDocumentProgress(doc.id, { 
+          percentage: progress, 
+          scrollPosition: position 
+        });
       }
-    }, 1000);
+    }, 2000); // 2 seconds debounce for scroll sync
   };
 
   useEffect(() => {

@@ -75,6 +75,18 @@
   padding: 0;
 }
 
+/* GPU Acceleration for smooth mobile experience */
+.reader-content, .text-content, .pdf-viewer, .dashboard-content {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize touch interactions */
+button, a {
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-primary);
