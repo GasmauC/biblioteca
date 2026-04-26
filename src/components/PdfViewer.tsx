@@ -38,20 +38,24 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
       try {
         const arrayBuffer = await file.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-        const doc = await loadingTask.promise;
-        setPdfDoc(doc);
-        if (onLoadSuccess) onLoadSuccess(doc.numPages);
+        const docObj = await loadingTask.promise;
+        setPdfDoc(docObj);
+        if (onLoadSuccess) onLoadSuccess(docObj.numPages);
         
-        // Ensure total pages is captured
-        useLibraryStore.getState().updateDocumentProgress(docId, {
-          totalPages: doc.numPages
-        });
+        // Ensure total pages is captured ONLY if needed to avoid loops
+        const currentDoc = useLibraryStore.getState().documents.find(d => d.id === docId);
+        if (currentDoc && currentDoc.progress?.totalPages !== docObj.numPages) {
+          useLibraryStore.getState().updateDocumentProgress(docId, {
+            totalPages: docObj.numPages
+          });
+        }
       } catch (error) {
         console.error('Error cargando el PDF:', error);
       }
     };
     loadPdf();
-  }, [file]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docId]);
 
   useEffect(() => {
     const renderPage = async () => {

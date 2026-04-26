@@ -10,7 +10,7 @@ import './Reader.css';
 export const Reader = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { documents } = useLibraryStore();
+  const doc = useLibraryStore(state => state.documents.find(d => d.id === id));
   const [textContent, setTextContent] = useState<string>('');
   const [zoom, setZoom] = useState<number>(100);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -20,7 +20,6 @@ export const Reader = () => {
   const [isLiquidMode, setIsLiquidMode] = useState<boolean>(false);
   const [highlightColor, setHighlightColor] = useState<string>('rgba(253, 224, 71, 0.5)'); // yellow
   
-  const doc = documents.find(d => d.id === id);
   const [currentPage, setCurrentPage] = useState<number>(doc?.progress?.currentPage || 1);
   const [totalPages, setTotalPages] = useState<number>(doc?.progress?.totalPages || 1);
 
@@ -52,7 +51,8 @@ export const Reader = () => {
       };
       reader.readAsText(doc.content as Blob);
     }
-  }, [doc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc?.id, doc?.type]);
 
   useEffect(() => {
     if (textContent && textContainerRef.current) {
@@ -95,18 +95,20 @@ export const Reader = () => {
   }, [doc?.id]);
 
   useEffect(() => {
+    const docId = doc?.id;
     const handleBeforeUnload = () => {
-      if (doc && textContainerRef.current) {
+      if (docId && textContainerRef.current) {
         const position = scrollRef.current;
         const target = textContainerRef.current;
         const maxScroll = target.scrollHeight - target.clientHeight;
         const progress = maxScroll > 0 ? Math.round((position / maxScroll) * 100) : 100;
-        useLibraryStore.getState().updateDocumentProgress(doc.id, { percentage: progress, scrollPosition: position });
+        useLibraryStore.getState().updateDocumentProgress(docId, { percentage: progress, scrollPosition: position });
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [doc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc?.id]);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 25, 50));
