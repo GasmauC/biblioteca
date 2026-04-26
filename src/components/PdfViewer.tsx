@@ -29,6 +29,8 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [isRendering, setIsRendering] = useState(false);
   const [liquidText, setLiquidText] = useState<string>('');
+  const [isLiquidLoading, setIsLiquidLoading] = useState(false);
+  const liquidTextCache = useRef<Record<number, string>>({});
   
   const [isDrawing, setIsDrawing] = useState(false);
   const currentLineRef = useRef<HighlightLine | null>(null);
@@ -57,49 +59,37 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docId]);
 
+  // --- Effect 1: Canvas Rendering (Only when not in Liquid Mode) ---
   useEffect(() => {
-    const renderPage = async () => {
-      if (!pdfDoc || !canvasRef.current || isRendering) return;
+    const renderCanvas = async () => {
+      // Abort visual render if in LiquidMode (canvas is unmounted)
+      if (!pdfDoc || isLiquidMode || !canvasRef.current || isRendering) return;
 
       try {
         setIsRendering(true);
         const pdfPage = await pdfDoc.getPage(page);
-        if (isLiquidMode) {
-          const textContent = await pdfPage.getTextContent();
-          // @ts-ignore
-          const strings = textContent.items.map(item => item.str);
-          
-          // Smart text reflow: Join strings, fixing broken newlines
-          let rawText = strings.join(' ');
-          // Regex to fix hyphenated words broken across lines
-          rawText = rawText.replace(/-\s+/g, '');
-          // Regex to join sentences broken abruptly (heuristic: if a line doesn't end with punctuation, join it)
-          rawText = rawText.replace(/([^\.\!\?\:\;])\s+(?=[a-z])/g, '$1 ');
-          
-          setLiquidText(rawText);
-        } else {
-          // Ajustamos la escala base para que 1.0 sea legible
-          const viewport = pdfPage.getViewport({ scale: scale * 1.5 });
-          const canvas = canvasRef.current;
-          const context = canvas.getContext('2d');
+        
+        // Ajustamos la escala base para que 1.0 sea legible
+        const viewport = pdfPage.getViewport({ scale: scale * 1.5 });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
 
-          if (context) {
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+        if (context) {
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
 
-            if (overlayRef.current) {
-              overlayRef.current.height = viewport.height;
-              overlayRef.current.width = viewport.width;
-            }
-
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-            // @ts-ignore
-            await pdfPage.render(renderContext).promise;
-            drawHighlights();
+          if (overlayRef.current) {
+            overlayRef.current.height = viewport.height;
+            overlayRef.current.width = viewport.width;
           }
+
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport,
+          };
+          // @ts-ignore
+          await pdfPage.render(renderContext).promise;
+          // drawHighlights is called via the other useEffect when it's safe
         }
       } catch (error) {
         console.error('Error renderizando página:', error);
@@ -108,8 +98,60 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
       }
     };
 
-    renderPage();
+    renderCanvas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfDoc, page, scale, isLiquidMode]);
+
+  // --- Effect 2: Liquid Mode Text Extraction ---
+  useEffect(() => {
+    const extractText = async () => {
+      if (!pdfDoc || !isLiquidMode) return;
+
+      // Use cache to prevent re-extracting text when switching pages
+      if (liquidTextCache.current[page]) {
+        setLiquidText(liquidTextCache.current[page]);
+        return;
+      }
+
+      setIsLiquidLoading(true);
+      setLiquidText('');
+
+      try {
+        const pdfPage = await pdfDoc.getPage(page);
+        const textContent = await pdfPage.getTextContent();
+        
+        // Yield to main thread to allow React to paint the loading spinner
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // @ts-ignore
+        const strings = textContent.items.map(item => item.str);
+        
+        if (strings.length === 0) {
+          const fallback = "Este documento es una imagen escaneada o no contiene texto extraíble.";
+          liquidTextCache.current[page] = fallback;
+          setLiquidText(fallback);
+          return;
+        }
+
+        let rawText = strings.join(' ');
+        
+        // Optimization: Fast regex to prevent catastrophic backtracking
+        rawText = rawText.replace(/-\s+/g, ''); // Fix hyphenation
+        rawText = rawText.replace(/\s{2,}/g, ' '); // Reduce multiple spaces
+        rawText = rawText.replace(/([^.!?])\s+([a-z])/g, '$1 $2'); // Join sentences
+        
+        liquidTextCache.current[page] = rawText;
+        setLiquidText(rawText);
+      } catch (error) {
+        console.error('Error extrayendo texto:', error);
+        setLiquidText('Error al procesar el texto de esta página.');
+      } finally {
+        setIsLiquidLoading(false);
+      }
+    };
+
+    extractText();
+  }, [pdfDoc, page, isLiquidMode]);
 
   const drawHighlights = useCallback(() => {
     const canvas = overlayRef.current;
@@ -197,7 +239,14 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
           wordWrap: 'break-word',
           textAlign: 'left'
         }}>
-          <p>{liquidText || 'Cargando texto...'}</p>
+          {isLiquidLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', color: 'var(--text-muted)' }}>
+              <div className="spinner" style={{ marginBottom: '1rem' }}></div>
+              <p>Optimizando lectura...</p>
+            </div>
+          ) : (
+            <p>{liquidText}</p>
+          )}
         </div>
       ) : (
         <div className="pdf-canvas-wrapper" style={{ position: 'relative' }}>
