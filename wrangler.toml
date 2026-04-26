@@ -1,7 +1,7 @@
 name = "biblioteca"
-main = "src/main.tsx" # Not used for static, but wrangler might need it
 compatibility_date = "2024-04-01"
 
-[site]
-bucket = "./dist"
-entry-point = "workers-site"
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
