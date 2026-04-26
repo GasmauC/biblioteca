@@ -154,13 +154,29 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
       try {
         const pdfPage = await pdfDoc.getPage(page);
+        const viewport = pdfPage.getViewport({ scale: 1.0 });
         const textContent = await pdfPage.getTextContent();
         
-        // Yield to main thread to allow React to paint the loading spinner
+        // Yield to main thread
         await new Promise(resolve => setTimeout(resolve, 50));
 
+        // Heuristic to filter headers and footers (top 10% and bottom 10% of page)
+        const headerThreshold = viewport.height * 0.9;
+        const footerThreshold = viewport.height * 0.1;
+        
         // @ts-ignore
-        const strings = textContent.items.map(item => item.str);
+        const filteredItems = textContent.items.filter(item => {
+          const y = item.transform[5];
+          // Ignore items that are too high or too low, or just page numbers (very short at top/bottom)
+          if (y > headerThreshold || y < footerThreshold) {
+            // Only ignore if it's relatively short (heuristic for headers/footers)
+            return item.str.length > 50; 
+          }
+          return true;
+        });
+
+        // @ts-ignore
+        const strings = (filteredItems.length > 0 ? filteredItems : textContent.items).map(item => item.str);
         
         if (strings.length === 0) {
           const fallback = "Este documento es una imagen escaneada o no contiene texto extraíble.";
@@ -171,10 +187,10 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
         let rawText = strings.join(' ');
         
-        // Optimization: Fast regex to prevent catastrophic backtracking
-        rawText = rawText.replace(/-\s+/g, ''); // Fix hyphenation
-        rawText = rawText.replace(/\s{2,}/g, ' '); // Reduce multiple spaces
-        rawText = rawText.replace(/([^.!?])\s+([a-z])/g, '$1 $2'); // Join sentences
+        // Clean up text
+        rawText = rawText.replace(/-\s+/g, ''); 
+        rawText = rawText.replace(/\s{2,}/g, ' '); 
+        rawText = rawText.replace(/([^.!?])\s+([a-z])/g, '$1 $2'); 
         
         liquidTextCache.current[page] = rawText;
         setLiquidText(rawText);

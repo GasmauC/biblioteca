@@ -269,15 +269,15 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 55px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 var(--space-4);
     z-index: 50;
-    background-color: #0d0d0f; /* Solid dark background to avoid text bleed */
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    border-radius: 0;
+    background-color: rgba(13, 13, 15, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
   }
 
   .mobile-title {
@@ -311,33 +311,42 @@
     display: flex;
     flex-direction: column;
     z-index: 50;
-    background-color: #0d0d0f; /* Solid dark background */
-    border-top: 1px solid rgba(255,255,255,0.05);
-    border-radius: 0; /* Flat, native app feel */
-    padding-bottom: env(safe-area-inset-bottom, 20px);
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
+    background-color: rgba(13, 13, 15, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: env(safe-area-inset-bottom, 10px);
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
   }
 
   .mobile-pagination {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-2) var(--space-6);
+    padding: var(--space-1) var(--space-6);
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
 
   .mobile-page-indicator {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-muted);
   }
 
   .mobile-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-8);
-    padding: var(--space-4) 0;
+    gap: var(--space-6);
+    padding: var(--space-2) 0;
+  }
+
+  .mobile-actions .toolbar-btn {
+    padding: var(--space-2);
+  }
+
+  .mobile-actions .toolbar-btn svg {
+    width: 20px;
+    height: 20px;
   }
 
   .document-page-placeholder, .text-viewer-container {
