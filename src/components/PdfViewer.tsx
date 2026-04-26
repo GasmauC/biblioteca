@@ -166,6 +166,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         
         // @ts-ignore
         const filteredItems = textContent.items.filter(item => {
+          if (!('transform' in item)) return false;
           const y = item.transform[5];
           // Ignore items that are too high or too low, or just page numbers (very short at top/bottom)
           if (y > headerThreshold || y < footerThreshold) {
@@ -176,7 +177,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         });
 
         // @ts-ignore
-        const strings = (filteredItems.length > 0 ? filteredItems : textContent.items).map(item => item.str);
+        const strings = (filteredItems.length > 0 ? filteredItems : textContent.items).map(item => 'str' in item ? item.str : '');
         
         if (strings.length === 0) {
           const fallback = "Este documento es una imagen escaneada o no contiene texto extraíble.";
