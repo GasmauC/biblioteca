@@ -160,18 +160,23 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         // Yield to main thread
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        // Heuristic to filter headers and footers (top 10% and bottom 10% of page)
-        const headerThreshold = viewport.height * 0.9;
-        const footerThreshold = viewport.height * 0.1;
+        // Heuristic to filter headers and footers (top 12% and bottom 12% of page)
+        const headerThreshold = viewport.height * 0.88;
+        const footerThreshold = viewport.height * 0.12;
         
         // @ts-ignore
         const filteredItems = textContent.items.filter(item => {
           if (!('transform' in item)) return false;
           const y = item.transform[5];
-          // Ignore items that are too high or too low, or just page numbers (very short at top/bottom)
+          const text = item.str.trim();
+          
+          // Ignore items in the header/footer areas
           if (y > headerThreshold || y < footerThreshold) {
-            // Only ignore if it's relatively short (heuristic for headers/footers)
-            return item.str.length > 50; 
+            // Heuristic: Ignore if it's short (likely header/footer content) 
+            // or if it's purely numeric (likely page number)
+            if (text.length < 60 || /^\d+$/.test(text)) {
+              return false;
+            }
           }
           return true;
         });
