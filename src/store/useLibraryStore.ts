@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { dbService, type DocItem, type HighlightLine, type ProgressState } from '../services/db';
 import { authService, type User } from '../services/auth';
-import { syncEngine } from '../services/sync';
 
 interface LibraryState {
   documents: DocItem[];
@@ -51,15 +50,8 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     if (authUnsubscribe) authUnsubscribe();
     authUnsubscribe = authService.onAuthStateChanged((user) => {
       set({ user });
-      if (user) {
-        // When user logs in, load local docs first, then pull from cloud
-        useLibraryStore.getState().loadDocuments().then(() => {
-          syncEngine.fullSyncPull(user.uid);
-        });
-      } else {
-        // Guest mode
-        useLibraryStore.getState().loadDocuments();
-      }
+      // Always load documents (guest mode is default now)
+      useLibraryStore.getState().loadDocuments();
     });
   },
 
@@ -98,8 +90,6 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }
       return { documents: [docWithUser, ...state.documents] };
     });
-    
-    syncEngine.pushToCloud(docWithUser);
   },
 
   toggleFavorite: async (id) => {
@@ -110,7 +100,6 @@ export const useLibraryStore = create<LibraryState>((set) => ({
           d.id === id ? updatedDoc : d
         )
       }));
-      syncEngine.pushToCloud(updatedDoc);
     }
   },
 
@@ -122,7 +111,6 @@ export const useLibraryStore = create<LibraryState>((set) => ({
           d.id === id ? updatedDoc : d
         )
       }));
-      syncEngine.pushToCloud(updatedDoc);
     }
   },
 
@@ -134,7 +122,6 @@ export const useLibraryStore = create<LibraryState>((set) => ({
           d.id === id ? updatedDoc : d
         )
       }));
-      syncEngine.pushToCloud(updatedDoc);
     }
   }
 }));

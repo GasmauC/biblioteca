@@ -3,5 +3,4 @@ compatibility_date = "2024-04-01"
 
 [assets]
 directory = "./dist"
-binding = "ASSETS"
-
+# Binding removed to fix "assets-only Worker" conflict

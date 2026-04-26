@@ -3,7 +3,6 @@ import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Bookmark, Moon, Sun, Highlighter,
 import { useShallow } from 'zustand/react/shallow';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { PdfViewer } from '../components/PdfViewer';
-import { SyncStatus } from '../components/SyncStatus';
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import './Reader.css';
@@ -245,7 +244,6 @@ export const Reader = () => {
           >
             <Bookmark size={20} fill={doc.isFavorite ? 'currentColor' : 'none'} />
           </button>
-          <SyncStatus />
           <button className="toolbar-btn" title="Pantalla completa"><Maximize size={20} /></button>
         </div>
       </header>
@@ -259,7 +257,6 @@ export const Reader = () => {
           <h2 className="truncate-text">{doc.name}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="mobile-meta">{doc.progress?.percentage || 0}%</span>
-            <SyncStatus />
           </div>
         </div>
         <button 

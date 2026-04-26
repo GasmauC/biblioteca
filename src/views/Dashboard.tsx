@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Layout } from '../components/Layout';
 import { DocumentCard } from '../components/DocumentCard';
 import { Button } from '../components/Button';
-import { SyncStatus } from '../components/SyncStatus';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search, FileText, Star, Clock, Menu } from 'lucide-react';
@@ -14,7 +13,7 @@ export const Dashboard = () => {
   const { 
     documents, loadDocuments, addDocument, isLoading,
     searchQuery, setSearchQuery, filterBy, sortBy, setSortBy, toggleFavorite,
-    setMobileSidebarOpen, user, loginWithGoogle, logout
+    setMobileSidebarOpen, user
   } = useLibraryStore(useShallow(state => ({
     documents: state.documents,
     loadDocuments: state.loadDocuments,
@@ -27,9 +26,7 @@ export const Dashboard = () => {
     setSortBy: state.setSortBy,
     toggleFavorite: state.toggleFavorite,
     setMobileSidebarOpen: state.setMobileSidebarOpen,
-    user: state.user,
-    loginWithGoogle: state.loginWithGoogle,
-    logout: state.logout
+    user: state.user
   })));
   const navigate = useNavigate();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -129,16 +126,6 @@ export const Dashboard = () => {
             <Button onClick={() => fileInputRef.current?.click()} variant="primary" size="sm" icon={<Plus size={16} />}>
               Añadir documento
             </Button>
-            <SyncStatus />
-            {user ? (
-              <div className="user-profile" onClick={logout} title="Cerrar sesión" style={{ backgroundImage: `url(${user.photoURL})`, backgroundSize: 'cover' }}>
-                {!user.photoURL && (user.displayName?.charAt(0) || 'U')}
-              </div>
-            ) : (
-              <Button onClick={loginWithGoogle} variant="secondary" size="sm">
-                Iniciar sesión
-              </Button>
-            )}
           </div>
         </header>
 
