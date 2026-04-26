@@ -30,30 +30,31 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   const [isRendering, setIsRendering] = useState(false);
   const [liquidText, setLiquidText] = useState<string>('');
   const [isLiquidLoading, setIsLiquidLoading] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const liquidTextCache = useRef<Record<number, string>>({});
-  
   const [isDrawing, setIsDrawing] = useState(false);
   const currentLineRef = useRef<HighlightLine | null>(null);
 
   useEffect(() => {
+    let currentLoadingTask: pdfjsLib.PDFDocumentLoadingTask | null = null;
+    
     const loadPdf = async () => {
+      if (!file) return;
+      setIsPdfLoading(true);
       try {
-        let loadingTask;
-        
         if (file instanceof Blob) {
           const arrayBuffer = await file.arrayBuffer();
-          loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          currentLoadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         } else if (typeof file === 'string') {
-          loadingTask = pdfjsLib.getDocument(file);
+          currentLoadingTask = pdfjsLib.getDocument(file);
         } else {
           throw new Error("Contenido de archivo no soportado");
         }
 
-        const docObj = await loadingTask.promise;
+        const docObj = await currentLoadingTask.promise;
         setPdfDoc(docObj);
         if (onLoadSuccess) onLoadSuccess(docObj.numPages);
         
-        // Ensure total pages is captured ONLY if needed to avoid loops
         const currentDoc = useLibraryStore.getState().documents.find(d => d.id === docId);
         if (currentDoc && currentDoc.progress?.totalPages !== docObj.numPages) {
           useLibraryStore.getState().updateDocumentProgress(docId, {
@@ -62,40 +63,44 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         }
       } catch (error) {
         console.error('Error cargando el PDF:', error);
+      } finally {
+        setIsPdfLoading(false);
       }
     };
+    
     loadPdf();
+    
     return () => {
-      if (pdfDoc) {
-        pdfDoc.destroy();
+      if (currentLoadingTask) {
+        currentLoadingTask.destroy();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docId, pdfDoc]);
+  }, [docId, file]);
 
   // --- Effect 1: Canvas Rendering (Only when not in Liquid Mode) ---
   useEffect(() => {
-    let renderTask: pdfjsLib.RenderTask | null = null;
+    let currentRenderTask: pdfjsLib.RenderTask | null = null;
 
     const renderCanvas = async () => {
-      if (!pdfDoc || isLiquidMode || !canvasRef.current || isRendering) return;
+      if (!pdfDoc || isLiquidMode || !canvasRef.current) return;
 
       try {
         setIsRendering(true);
         const pdfPage = await pdfDoc.getPage(page);
         
-        // Mobile-optimized DPI: Cap at 2.0 to save memory and CPU
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const viewport = pdfPage.getViewport({ scale: scale * 1.5 * dpr });
         
         const canvas = canvasRef.current;
-        const context = canvas.getContext('2d', { alpha: false }); // Optimization: Opaque canvas
+        const context = canvas.getContext('2d');
 
         if (context) {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           
-          // CSS size matches the intended visual size
+          context.fillStyle = 'white';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          
           canvas.style.width = `${viewport.width / dpr}px`;
           canvas.style.height = `${viewport.height / dpr}px`;
 
@@ -111,9 +116,8 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
             viewport: viewport,
           };
           
-          // @ts-ignore - PDF.js types can be tricky between versions
-          renderTask = pdfPage.render(renderContext);
-          await renderTask.promise;
+          currentRenderTask = pdfPage.render(renderContext);
+          await currentRenderTask.promise;
         }
       } catch (error: any) {
         if (error.name !== 'RenderingCancelledException') {
@@ -127,11 +131,10 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
     renderCanvas();
 
     return () => {
-      if (renderTask) {
-        renderTask.cancel();
+      if (currentRenderTask) {
+        currentRenderTask.cancel();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfDoc, page, scale, isLiquidMode]);
 
   // --- Effect 2: Liquid Mode Text Extraction ---
@@ -281,8 +284,14 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
           )}
         </div>
       ) : (
-        <div className="pdf-canvas-wrapper" style={{ position: 'relative' }}>
-          <canvas ref={canvasRef} className="pdf-canvas shadow-premium" />
+        <div className="pdf-canvas-wrapper" style={{ position: 'relative', minHeight: '500px' }}>
+          {(isPdfLoading || isRendering) && (
+            <div className="pdf-loading-overlay">
+              <div className="spinner"></div>
+              <p>{isPdfLoading ? 'Abriendo documento...' : 'Renderizando página...'}</p>
+            </div>
+          )}
+          <canvas ref={canvasRef} className="pdf-canvas shadow-premium" style={{ opacity: isRendering ? 0.6 : 1, transition: 'opacity 0.2s' }} />
           <canvas 
             ref={overlayRef} 
             className="highlight-overlay" 

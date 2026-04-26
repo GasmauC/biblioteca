@@ -28,6 +28,24 @@
   border-radius: 8px; /* Apply rounding directly to canvas since wrapper overflow is visible */
 }
 
+.pdf-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 13, 15, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+  color: white;
+  gap: 1rem;
+  border-radius: 8px;
+}
+
 .pdf-navigation-panel {
   position: fixed;
   bottom: var(--space-8);
