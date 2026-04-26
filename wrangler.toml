@@ -3,4 +3,5 @@ compatibility_date = "2024-04-01"
 
 [assets]
 directory = "./dist"
-# Binding removed to fix "assets-only Worker" conflict
+not_found_asset = "index.html"
+
