@@ -8,7 +8,8 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isMobileSidebarOpen, setMobileSidebarOpen } = useLibraryStore();
+  const isMobileSidebarOpen = useLibraryStore(state => state.isMobileSidebarOpen);
+  const setMobileSidebarOpen = useLibraryStore(state => state.setMobileSidebarOpen);
 
   return (
     <div className="layout">

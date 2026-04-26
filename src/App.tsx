@@ -19,7 +19,7 @@ function AnimatedRoutes() {
 }
 
 function App() {
-  const { initAuth } = useLibraryStore();
+  const initAuth = useLibraryStore(state => state.initAuth);
 
   useEffect(() => {
     initAuth();

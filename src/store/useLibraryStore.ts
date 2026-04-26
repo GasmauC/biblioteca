@@ -29,6 +29,8 @@ interface LibraryState {
   initAuth: () => void;
 }
 
+let authUnsubscribe: (() => void) | null = null;
+
 export const useLibraryStore = create<LibraryState>((set) => ({
   documents: [],
   isLoading: false,
@@ -46,7 +48,8 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   setSyncStatus: (status) => set({ syncStatus: status }),
 
   initAuth: () => {
-    authService.onAuthStateChanged((user) => {
+    if (authUnsubscribe) authUnsubscribe();
+    authUnsubscribe = authService.onAuthStateChanged((user) => {
       set({ user });
       if (user) {
         // When user logs in, load local docs first, then pull from cloud

@@ -6,6 +6,7 @@ import { DocumentCard } from '../components/DocumentCard';
 import { Button } from '../components/Button';
 import { SyncStatus } from '../components/SyncStatus';
 import { useLibraryStore } from '../store/useLibraryStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Plus, Search, FileText, Star, Clock, Menu } from 'lucide-react';
 import './Dashboard.css';
 
@@ -14,7 +15,22 @@ export const Dashboard = () => {
     documents, loadDocuments, addDocument, isLoading,
     searchQuery, setSearchQuery, filterBy, sortBy, setSortBy, toggleFavorite,
     setMobileSidebarOpen, user, loginWithGoogle, logout
-  } = useLibraryStore();
+  } = useLibraryStore(useShallow(state => ({
+    documents: state.documents,
+    loadDocuments: state.loadDocuments,
+    addDocument: state.addDocument,
+    isLoading: state.isLoading,
+    searchQuery: state.searchQuery,
+    setSearchQuery: state.setSearchQuery,
+    filterBy: state.filterBy,
+    sortBy: state.sortBy,
+    setSortBy: state.setSortBy,
+    toggleFavorite: state.toggleFavorite,
+    setMobileSidebarOpen: state.setMobileSidebarOpen,
+    user: state.user,
+    loginWithGoogle: state.loginWithGoogle,
+    logout: state.logout
+  })));
   const navigate = useNavigate();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
