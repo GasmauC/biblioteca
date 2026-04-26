@@ -116,6 +116,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
             viewport: viewport,
           };
           
+          // @ts-ignore
           currentRenderTask = pdfPage.render(renderContext);
           await currentRenderTask.promise;
         }
