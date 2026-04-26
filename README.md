@@ -1,48 +1,55 @@
 # Lector de Documentos Pro
 
-Una aplicación moderna y rápida para gestionar y leer documentos PDF, TXT y HTML, optimizada para escritorio y móviles.
+Una aplicación web moderna y minimalista para gestionar y leer documentos PDF y de texto con un enfoque en la privacidad y el rendimiento móvil.
 
-## Características Principales
+## 🚀 Características
 
-- **Multi-formato**: Soporte para lectura de archivos PDF, TXT y HTML.
-- **Liquid Mode**: Permite extraer el texto de documentos PDF para una lectura fluida (reflow) adaptable a pantallas pequeñas.
-- **Responsive Design**: Interfaz 100% adaptable a dispositivos móviles.
-- **Persistencia Avanzada**: Utiliza IndexedDB para guardar localmente tus documentos, progreso exacto, marcadores y favoritos.
-- **Resaltador Integrado**: Herramienta de resaltado para PDFs con guardado automático.
-- **Modo Oscuro/Claro**: Adaptado a la preferencia de lectura.
+- **Lectura Fluida**: Lector de PDF optimizado con soporte para "Liquid Mode" (reflow de texto) en dispositivos móviles.
+- **Privacidad Primero**: Los documentos se almacenan localmente en el navegador usando IndexedDB. Tus datos nunca salen de tu dispositivo.
+- **Modo Oscuro**: Interfaz premium diseñada para reducir la fatiga visual.
+- **Marcadores y Progreso**: Guarda automáticamente tu última página leída y permite marcar tus documentos favoritos.
+- **Rendimiento Mobile**: Optimizado con aceleración por GPU y gestión inteligente de memoria.
 
-## Autoría
+## 🛠️ Tecnologías
 
-Diseñado y desarrollado por **Gastón Mauricio Cane**.
+- **Frontend**: React 19 + TypeScript
+- **Estilo**: CSS Vanilla (Diseño Premium Moderno)
+- **Estado**: Zustand (Granular & Estable)
+- **Almacenamiento**: IndexedDB (via `idb` library)
+- **PDF Engine**: PDF.js
+- **Animaciones**: Framer Motion
 
-## Tecnologías Utilizadas
+## 📦 Instalación
 
-- React 19
-- TypeScript
-- Vite
-- Zustand (Manejo de estado)
-- IndexedDB (Almacenamiento persistente local)
-- PDF.js (Renderizado y parseo de PDFs)
-- Framer Motion (Animaciones)
-- Tailwind / CSS Vanilla (Estilos)
+Sigue estos pasos para ejecutar el proyecto localmente:
 
-## Instrucciones de Instalación
+1. **Clonar el repositorio**:
+   ```bash
+   git clone https://github.com/GasmauC/biblioteca.git
+   cd biblioteca
+   ```
 
-1. Clona este repositorio.
-2. Instala las dependencias:
+2. **Instalar dependencias**:
    ```bash
    npm install
    ```
-3. Ejecuta el entorno de desarrollo:
+
+3. **Ejecutar en modo desarrollo**:
    ```bash
    npm run dev
    ```
 
-## Preparación para Producción
+## 🚀 Despliegue en Cloudflare
 
-Para compilar la aplicación para producción:
+Este proyecto está configurado para desplegarse de forma sencilla en **Cloudflare Pages** o **Cloudflare Workers**.
 
-```bash
-npm run build
-```
-Los archivos optimizados se generarán en la carpeta `dist`.
+### Configuración del Build
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+
+### Soporte SPA
+La aplicación incluye un archivo `public/_redirects` que configura automáticamente el fallback de rutas para que el enrutamiento de React funcione correctamente en producción.
+
+## 📄 Licencia
+
+Este proyecto es de uso personal y educativo. Creado por [Gastón Mauricio Cane](https://github.com/GasmauC).
