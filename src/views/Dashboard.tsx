@@ -132,7 +132,7 @@ export const Dashboard = () => {
             <SyncStatus />
             {user ? (
               <div className="user-profile" onClick={logout} title="Cerrar sesión" style={{ backgroundImage: `url(${user.photoURL})`, backgroundSize: 'cover' }}>
-                {!user.photoURL && user.displayName.charAt(0)}
+                {!user.photoURL && (user.displayName?.charAt(0) || 'U')}
               </div>
             ) : (
               <Button onClick={loginWithGoogle} variant="secondary" size="sm">
@@ -145,7 +145,7 @@ export const Dashboard = () => {
         <main className="dashboard-content">
           <section className="hero-section">
             <div className="hero-text">
-              <h1>Buenos días, Lector</h1>
+              <h1>Buenos días, {user?.displayName?.split(' ')[0] || 'Lector'}</h1>
               <p>Tu biblioteca personal está lista. Tienes {stats.total} documentos en total.</p>
             </div>
             <div className="stats-grid">

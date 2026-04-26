@@ -1,56 +1,44 @@
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut, 
+  onAuthStateChanged,
+  type User as FirebaseUser 
+} from 'firebase/auth';
+import { auth } from './firebase';
+
 export interface User {
   uid: string;
-  email: string;
-  displayName: string;
-  photoURL?: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL?: string | null;
 }
 
 type AuthStateChangedCallback = (user: User | null) => void;
 
 class AuthService {
   private currentUser: User | null = null;
-  private listeners: AuthStateChangedCallback[] = [];
 
-  constructor() {
-    // Check if mock user is stored in localStorage to persist login between reloads
-    const savedUser = localStorage.getItem('mock_google_user');
-    if (savedUser) {
-      try {
-        this.currentUser = JSON.parse(savedUser);
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
-      }
+  async loginWithGoogle(): Promise<User> {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      this.currentUser = this.mapFirebaseUser(result.user);
+      return this.currentUser;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     }
   }
 
-  // Simulate a Google Login via OAuth popup
-  async loginWithGoogle(): Promise<User> {
-    return new Promise((resolve) => {
-      // Simulate network delay
-      setTimeout(() => {
-        const mockUser: User = {
-          uid: 'google-user-12345',
-          email: 'usuario@gmail.com',
-          displayName: 'Lector Pro',
-          photoURL: `https://ui-avatars.com/api/?name=Lector+Pro&background=random`
-        };
-        this.currentUser = mockUser;
-        localStorage.setItem('mock_google_user', JSON.stringify(mockUser));
-        this.notifyListeners();
-        resolve(mockUser);
-      }, 800);
-    });
-  }
-
   async logout(): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.currentUser = null;
-        localStorage.removeItem('mock_google_user');
-        this.notifyListeners();
-        resolve();
-      }, 500);
-    });
+    try {
+      await signOut(auth);
+      this.currentUser = null;
+    } catch (error) {
+      console.error('Logout failed:', error);
+      throw error;
+    }
   }
 
   getCurrentUser(): User | null {
@@ -58,18 +46,19 @@ class AuthService {
   }
 
   onAuthStateChanged(callback: AuthStateChangedCallback): () => void {
-    this.listeners.push(callback);
-    // Immediately call with current state
-    callback(this.currentUser);
-    
-    // Return unsubscribe function
-    return () => {
-      this.listeners = this.listeners.filter(cb => cb !== callback);
-    };
+    return onAuthStateChanged(auth, (firebaseUser) => {
+      this.currentUser = firebaseUser ? this.mapFirebaseUser(firebaseUser) : null;
+      callback(this.currentUser);
+    });
   }
 
-  private notifyListeners() {
-    this.listeners.forEach(cb => cb(this.currentUser));
+  private mapFirebaseUser(user: FirebaseUser): User {
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL
+    };
   }
 }
 

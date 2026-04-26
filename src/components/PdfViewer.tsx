@@ -38,8 +38,17 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   useEffect(() => {
     const loadPdf = async () => {
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        let loadingTask;
+        
+        if (file instanceof Blob) {
+          const arrayBuffer = await file.arrayBuffer();
+          loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        } else if (typeof file === 'string') {
+          loadingTask = pdfjsLib.getDocument(file);
+        } else {
+          throw new Error("Contenido de archivo no soportado");
+        }
+
         const docObj = await loadingTask.promise;
         setPdfDoc(docObj);
         if (onLoadSuccess) onLoadSuccess(docObj.numPages);

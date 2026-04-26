@@ -45,13 +45,19 @@ export const Reader = () => {
 
   useEffect(() => {
     if (doc?.content && (doc.type === 'txt' || doc.type === 'html')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setTextContent(e.target?.result as string);
-      };
-      reader.readAsText(doc.content as Blob);
+      if (doc.content instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setTextContent(e.target?.result as string);
+        };
+        reader.readAsText(doc.content as Blob);
+      } else if (typeof doc.content === 'string') {
+        fetch(doc.content)
+          .then(res => res.text())
+          .then(text => setTextContent(text))
+          .catch(err => console.error("Error cargando contenido de texto desde URL:", err));
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc?.id, doc?.type]);
 
   useEffect(() => {
