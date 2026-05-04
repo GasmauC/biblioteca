@@ -13,6 +13,7 @@ interface LibraryState {
   setSortBy: (sort: 'recent' | 'name') => void;
   loadDocuments: () => Promise<void>;
   addDocument: (doc: DocItem) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   updateDocumentProgress: (id: string, progressUpdate: Partial<ProgressState>) => Promise<void>;
   updateDocumentHighlights: (id: string, pageNum: number, highlights: HighlightLine[]) => Promise<void>;
@@ -90,6 +91,13 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }
       return { documents: [docWithUser, ...state.documents] };
     });
+  },
+
+  deleteDocument: async (id) => {
+    await dbService.deleteDocument(id);
+    set((state) => ({
+      documents: state.documents.filter(d => d.id !== id)
+    }));
   },
 
   toggleFavorite: async (id) => {

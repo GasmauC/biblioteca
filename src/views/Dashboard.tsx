@@ -11,13 +11,14 @@ import './Dashboard.css';
 
 export const Dashboard = () => {
   const { 
-    documents, loadDocuments, addDocument, isLoading,
+    documents, loadDocuments, addDocument, deleteDocument, isLoading,
     searchQuery, setSearchQuery, filterBy, sortBy, setSortBy, toggleFavorite,
     setMobileSidebarOpen, user
   } = useLibraryStore(useShallow(state => ({
     documents: state.documents,
     loadDocuments: state.loadDocuments,
     addDocument: state.addDocument,
+    deleteDocument: state.deleteDocument,
     isLoading: state.isLoading,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
@@ -201,6 +202,13 @@ export const Dashboard = () => {
                       onBookmarkToggle={(e) => {
                         e.stopPropagation();
                         toggleFavorite(doc.id);
+                      }}
+                      onDelete={(e) => {
+                        e.stopPropagation();
+                        deleteDocument(doc.id);
+                        import('react-hot-toast').then(({ toast }) => {
+                          toast.success('Documento eliminado');
+                        });
                       }}
                     />
                   ))
